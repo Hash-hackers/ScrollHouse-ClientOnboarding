@@ -3,9 +3,9 @@ from email.mime.text import MIMEText
 
 
 def send_scrollhouse_welcome_email(
-    generate_text,        # <- your Gemini text function
-    smtp_email,
-    smtp_password,
+    generate_text,        # function that calls Gemini
+    smtp_email,           # your gmail
+    smtp_password,        # gmail app password
     client_name,
     brand_name,
     client_email,
@@ -13,10 +13,10 @@ def send_scrollhouse_welcome_email(
     kickoff_calendar_link,
 ):
     """
-    Generates and sends Scrollhouse welcome email using any LLM.
+    Generate and send Scrollhouse welcome email.
     """
 
-    # 1️⃣ Prompt for LLM
+    # 🧠 Prompt for Gemini
     prompt = f"""
 Write a warm, professional welcome email.
 
@@ -25,31 +25,30 @@ Brand name: {brand_name}
 Account manager: {account_manager}
 Kickoff link: {kickoff_calendar_link}
 
-Include:
+The email must include:
 • Welcome message
-• Brief Scrollhouse process
+• Brief explanation of Scrollhouse process
 • What happens in first 2 weeks
 • Ask them to book kickoff call
 • Friendly but professional tone
-• 120–160 words
+• 120–150 words
 """
 
-    # 2️⃣ Generate email using Gemini/OpenAI/etc
+    # ✍️ Generate email text using Gemini
     email_body = generate_text(prompt)
+
+    # 📌 Email subject
     subject = f"Welcome to Scrollhouse, {brand_name}! 🚀"
 
-    # 3️⃣ Send email
+    # 📤 Create email message
     msg = MIMEText(email_body)
     msg["Subject"] = subject
     msg["From"] = smtp_email
     msg["To"] = client_email
 
+    # 📬 Send email using Gmail SMTP
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(smtp_email, smtp_password)
         server.send_message(msg)
 
-    return {
-        "status": "sent",
-        "recipient": client_email,
-        "subject": subject
-    }
+    print(f"✅ Welcome email sent to {client_email}")
