@@ -1,26 +1,24 @@
-import os
 import smtplib
 from email.mime.text import MIMEText
-from dotenv import load_dotenv
-from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage
 
-load_dotenv()
 
 def send_scrollhouse_welcome_email(
-    client_name: str,
-    brand_name: str,
-    client_email: str,
-    account_manager: str,
-    kickoff_calendar_link: str,
+    llm,                       # pass ChatOpenAI() from main app
+    smtp_email,                # sender email
+    smtp_password,             # app password
+    client_name,
+    brand_name,
+    client_email,
+    account_manager,
+    kickoff_calendar_link,
 ):
     """
-    Generates and sends Scrollhouse welcome email.
+    Generates and sends the Scrollhouse welcome email.
+    Returns dict with send status.
     """
 
     # 1️⃣ Generate email using LLM
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.4)
-
     prompt = f"""
 Write a warm, professional welcome email.
 
@@ -39,21 +37,18 @@ The email must include:
     email_body = llm.invoke([HumanMessage(content=prompt)]).content
     subject = f"Welcome to Scrollhouse, {brand_name}! 🚀"
 
-    # 2️⃣ Send email via Gmail SMTP
-    sender = os.getenv("EMAIL_USER")
-    password = os.getenv("EMAIL_PASS")
-
+    # 2️⃣ Send email
     msg = MIMEText(email_body)
     msg["Subject"] = subject
-    msg["From"] = sender
+    msg["From"] = smtp_email
     msg["To"] = client_email
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(sender, password)
+        server.login(smtp_email, smtp_password)
         server.send_message(msg)
 
     return {
-        "status": "success",
-        "sent_to": client_email,
+        "status": "sent",
+        "recipient": client_email,
         "subject": subject
     }
